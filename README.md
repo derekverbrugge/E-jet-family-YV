@@ -13,6 +13,7 @@ Authors and contributors:
 - Stefan Frank (3D, liveries)
 - legoboyvldp (3D, systems, whatever we stole from the A320, being generally
   helpful)
+- Derek Verbrugge (Reflections, liveries)
 - ...and others
 
 ITAF autoflight system:
