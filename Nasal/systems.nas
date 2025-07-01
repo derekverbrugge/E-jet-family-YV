@@ -1,11 +1,74 @@
 # E-jet-family SYSTEMS
 #########################
 
+
+## ODD/EVEN DAY LOGIC
+#####################
+
+var oddDay = rand() < 0.5;
+setprop('/systems/actuators/odd-day', oddDay);
+
+
 ## LIVERY SELECT
 ################
 
 var aero = substr(getprop("sim/aero"), 4);
 aircraft.livery.init("Aircraft/E-jet-family/Models/Liveries/" ~ aero);
+
+## PFD SLAVING
+##############
+
+setlistener('options/instrumentation/pfd-coupling', func (node) {
+    var val = substr(node.getValue(), 0, 1);
+    if (val == '1') {
+        setprop('/instrumentation/pfd[0]/slaved', 1);
+        setprop('/instrumentation/pfd[1]/slaved', 0);
+    }
+    elsif (val == '2') {
+        setprop('/instrumentation/pfd[0]/slaved', 0);
+        setprop('/instrumentation/pfd[1]/slaved', 1);
+    }
+    else {
+        setprop('/instrumentation/pfd[0]/slaved', 0);
+        setprop('/instrumentation/pfd[1]/slaved', 0);
+    }
+}, 1, 0);
+
+## SHARED CCD INPUT
+###################
+
+var activeCCDNode = props.globals.getNode('/controls/shared-ccd/target');
+var registerCCDProp = func (propname, transform = nil) {
+    var target0 = props.globals.getNode('/controls/ccd[0]/' ~ propname);
+    var target1 = props.globals.getNode('/controls/ccd[1]/' ~ propname);
+    setlistener('/controls/shared-ccd/' ~ propname, func (node) {
+        var value = node.getValue();
+        if (activeCCDNode.getValue() == 0) {
+            if (transform)
+                value = transform(0, value);
+            target0.setValue(value);
+        }
+        else {
+            if (transform)
+                value = transform(1, value);
+            target1.setValue(value);
+        }
+    }, 0, 1);
+};
+
+registerCCDProp('rel-x');
+registerCCDProp('rel-y');
+registerCCDProp('rel-inner');
+registerCCDProp('rel-outer');
+registerCCDProp('screen-select', func (index, value) {
+    if (index) {
+        return 2 - value;
+    }
+    else {
+        return value;
+    }
+});
+registerCCDProp('click');
 
 ## LIGHTS
 #########

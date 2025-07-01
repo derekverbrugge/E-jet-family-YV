@@ -80,6 +80,7 @@
             <path>/options/controls/ccd-emulation</path>
             <path>/options/instrumentation/iru-alignment-mode</path>
             <path>/options/instrumentation/iru-auto-align</path>
+            <path>/options/instrumentation/pfd-coupling</path>
             <path>/instrumentation/efb/available</path>
             <path>/instrumentation/efb/show-debug-apps</path>
             <path>/instrumentation/efb/brightness</path>
@@ -171,6 +172,14 @@
                 <path>Aircraft/E-jet-family/Systems/spoilers.xml</path>
             </autopilot>
             <autopilot>
+                <name>HStab</name>
+                <path>Aircraft/E-jet-family/Systems/stabilizer.xml</path>
+            </autopilot>
+            <autopilot>
+                <name>HStab</name>
+                <path>Aircraft/E-jet-family/Systems/pcu.xml</path>
+            </autopilot>
+            <autopilot>
                 <name>Pushback</name>
                 <path>Aircraft/E-jet-family/Systems/pushback-steering.xml</path>
             </autopilot>
@@ -195,6 +204,10 @@
                 <path>Aircraft/E-jet-family/Systems/pneumatic.xml</path>
             </autopilot>
             <autopilot>
+                <name>Hydraulics</name>
+                <path>Aircraft/E-jet-family/Systems/hydraulics.xml</path>
+            </autopilot>
+            <autopilot>
                 <name>Pressurization</name>
                 <path>Aircraft/E-jet-family/Systems/pressurization.xml</path>
             </autopilot>
@@ -211,7 +224,7 @@
             <property-rule n="102">
                 <path>Aircraft/E-jet-family/Systems/eicas.xml</path>
             </property-rule>
-            <property-rule n="102">
+            <property-rule n="103">
                 <path>Aircraft/E-jet-family/Systems/efis.xml</path>
             </property-rule>
             <autopilot>
@@ -276,6 +289,8 @@
                 <path></path>
             </electrical>
         </systems>
+
+        <checklists include="Checklists/checklists.xml" />
 
         <chase-distance-m>-50</chase-distance-m>
 
@@ -745,6 +760,7 @@
         <instrumentation>
             <iru-alignment-mode type="string">normal</iru-alignment-mode>
             <iru-auto-align type="bool">false</iru-auto-align>
+            <pfd-coupling type="string">independent</pfd-coupling>
         </instrumentation>
     </options>
 
@@ -755,9 +771,9 @@
     <it-autoflight>
         <config>
             <roll>
-                <kp-low>0.2</kp-low>
-                <kp-high>0.04</kp-high>
-                <ti>1.0</ti>
+                <kp-low>0.4</kp-low>
+                <kp-high>0.4</kp-high>
+                <ti>4.0</ti>
                 <td>0.0001</td>
             </roll>
             <pitch>
@@ -1231,6 +1247,20 @@
             <vmo-effective type="double">320</vmo-effective>
         </speed-limits>
 
+        <cruise-speeds>
+            <!-- effective as per cruise mode -->
+            <cruise-kts type="double">240</cruise-kts>
+            <cruise-mach type="double">0.76</cruise-mach>
+
+            <!-- speeds per cruise mode -->
+            <vlrc type="double">240</vlrc>
+            <mlrc type="double">0.76</mlrc>
+            <vmxe type="double">210</vmxe>
+            <mmxe type="double">0.6</mmxe>
+            <vmxr type="double">230</vmxr>
+            <mmxr type="double">0.73</mmxr>
+        </cruise-speeds>
+
         <!--
             These are effective v-speeds, as displayed on the PFD, and used
             by the FMS-managed speed mode.
@@ -1671,6 +1701,173 @@
                 <apu type="double">0</apu>
             </external-flow>
         </fuel>
+        <hydraulic>
+            <system n="0">
+                <edp>
+                    <engaged type="bool">false</engaged>
+                    <power type="double">0.0</power>
+                </edp>
+                <ehp>
+                    <engaged type="bool">false</engaged>
+                    <power type="double">1.0</power>
+                </ehp>
+                <pressure-psi type="double">0.0</pressure-psi>
+                <fill-ratio type="double">0.9</fill-ratio>
+                <accumulator type="double">0.0</accumulator>
+                <emergency-accumulator type="double">1.0</emergency-accumulator>
+                <sinks>
+                    <elevator-left-outboard type="double">0.0</elevator-left-outboard>
+                    <rudder-upper type="double">0.0</rudder-upper>
+                    <thrust-reverser-left type="double">0.0</thrust-reverser-left>
+                    <mfs2 type="double">0.0</mfs2>
+                    <mfs3 type="double">0.0</mfs3>
+                    <mfs4 type="double">0.0</mfs4>
+                    <mfs7 type="double">0.0</mfs7>
+                    <mfs8 type="double">0.0</mfs8>
+                    <mfs9 type="double">0.0</mfs9>
+                    <brake-left-outboard type="double">0.0</brake-left-outboard>
+                    <brake-right-outboard type="double">0.0</brake-right-outboard>
+                    <parking-brake type="double">0.0</parking-brake>
+                    <ptu type="double">0.0</ptu>
+                </sinks>
+            </system>
+            <system n="1">
+                <edp>
+                    <engaged type="bool">false</engaged>
+                    <power type="double">0.0</power>
+                </edp>
+                <ehp>
+                    <engaged type="bool">false</engaged>
+                    <power type="double">1.0</power>
+                </ehp>
+                <ptu>
+                    <engaged type="bool">false</engaged>
+                    <power type="double">0.0</power>
+                </ptu>
+                <pressure-psi type="double">0.0</pressure-psi>
+                <fill-ratio type="double">0.9</fill-ratio>
+                <accumulator type="double">0.0</accumulator>
+                <emergency-accumulator type="double">1.0</emergency-accumulator>
+                <sinks>
+                    <elevator-left-inboard type="double">0.0</elevator-left-inboard>
+                    <elevator-right-inboard type="double">0.0</elevator-right-inboard>
+                    <aileron-left-inboard type="double">0.0</aileron-left-inboard>
+                    <aileron-right-inboard type="double">0.0</aileron-right-inboard>
+                    <thrust-reverser-right type="double">0.0</thrust-reverser-right>
+                    <mfs1 type="double">0.0</mfs1>
+                    <mfs5 type="double">0.0</mfs5>
+                    <mfs6 type="double">0.0</mfs6>
+                    <mfs10 type="double">0.0</mfs10>
+                    <brake-left-inboard type="double">0.0</brake-left-inboard>
+                    <brake-right-inboard type="double">0.0</brake-right-inboard>
+                    <nosewheel-steering type="double">0.0</nosewheel-steering>
+                    <landing-gear type="double">0.0</landing-gear>
+                    <parking-brake type="double">0.0</parking-brake>
+                </sinks>
+            </system>
+            <system n="2">
+                <ehp>
+                    <engaged type="bool">false</engaged>
+                    <power type="double">1.0</power>
+                </ehp>
+                <ehp>
+                    <engaged type="bool">false</engaged>
+                    <power type="double">0.0</power>
+                </ehp>
+                <pressure-psi type="double">0.0</pressure-psi>
+                <fill-ratio type="double">0.9</fill-ratio>
+                <accumulator type="double">0.0</accumulator>
+                <sinks>
+                    <elevator-left-outboard type="double">0.0</elevator-left-outboard>
+                    <elevator-right-outboard type="double">0.0</elevator-right-outboard>
+                    <rudder-lower type="double">0.0</rudder-lower>
+                    <aileron-left-outboard type="double">0.0</aileron-left-outboard>
+                    <aileron-right-outboard type="double">0.0</aileron-right-outboard>
+                </sinks>
+            </system>
+        </hydraulic>
+        <actuators>
+            <odd-day type="bool">false</odd-day>
+
+            <elevator>
+                <pcu n="0">
+                    <name>Left Outboard Elevator PCU</name>
+                    <priority type="bool">true</priority>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+                <pcu n="1">
+                    <name>Left Inboard Elevator PCU</name>
+                    <priority type="bool">false</priority>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+                <pcu n="2">
+                    <name>Right Inboard Elevator PCU</name>
+                    <priority type="bool">true</priority>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+                <pcu n="3">
+                    <name>Right Outboard Elevator PCU</name>
+                    <priority type="bool">false</priority>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+                <hydraulic-system n="0" type="int">0</hydraulic-system>
+                <hydraulic-system n="1" type="int">0</hydraulic-system>
+            </elevator>
+
+            <aileron>
+                <pcu n="0">
+                    <name>Left Outboard Aileron PCU</name>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+                <pcu n="1">
+                    <name>Left Inboard Aileron PCU</name>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+                <pcu n="2">
+                    <name>Right Inboard Aileron PCU</name>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+                <pcu n="3">
+                    <name>Right Outboard Aileron PCU</name>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+            </aileron>
+
+            <rudder>
+                <pcu n="0">
+                    <name>Upper Rudder PCU</name>
+                    <priority type="bool">true</priority>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+                <pcu n="1">
+                    <name>Lower Rudder PCU</name>
+                    <priority type="bool">false</priority>
+                    <active type="bool">false</active>
+                    <available type="bool">true</available>
+                    <status type="int">-1</status>
+                </pcu>
+                <hydraulic-system type="int">0</hydraulic-system>
+            </rudder>
+        </actuators>
+
         <pneumatic>
             <valves>
                 <xbleed>
@@ -1906,6 +2103,7 @@
             <recirc type="bool">false</recirc>
             <mode type="int">0</mode>
             <alt type="int">0</alt>
+            <lfe type="int">0</lfe>
 
             <takeoff-ref-ecs type="bool">true</takeoff-ref-ecs>
         </pressurization>
@@ -1915,8 +2113,28 @@
             <engine-bleed n="0" type="bool">false</engine-bleed>
             <engine-bleed n="1" type="bool">false</engine-bleed>
             <xbleed type="bool">false</xbleed>
-
         </pneumatic>
+
+        <hydraulic>
+            <edp-shutoff n="0" type="bool">0</edp-shutoff>
+            <edp-shutoff n="1" type="bool">0</edp-shutoff>
+
+            <!-- -1 = off, 0 = auto, 1 = on -->
+            <ptu type="int">-1</ptu>
+
+            <!-- EHP1 -->
+            <!-- -1 = off, 0 = auto, 1 = on -->
+            <ehp n="0" type="int">-1</ehp>
+            <!-- EHP2 -->
+            <!-- -1 = off, 0 = auto, 1 = on -->
+            <ehp n="1" type="int">-1</ehp>
+            <!-- EHP3A -->
+            <!-- -1 = off, 0 or 1 = on -->
+            <ehp n="2" type="int">-1</ehp>
+            <!-- EHP3B -->
+            <!-- -1 = off, 0 = auto, 1 = on -->
+            <ehp n="3" type="int">-1</ehp>
+        </hydraulic>
 
         <apu>
             <fire-switch type="bool">false</fire-switch>
@@ -2047,9 +2265,20 @@
                 <climb-limit-alt type="double">10000</climb-limit-alt>
                 <climb-kts type="double">280</climb-kts>
                 <climb-mach type="double">0.73</climb-mach>
+
+                <!-- pilot-selected values for cruise-mode = 0 -->
                 <cruise-kts type="double">300</cruise-kts>
                 <cruise-mach type="double">0.76</cruise-mach>
+
+                <!--
+                    0 = pilot selected
+                    1 = LRC
+                    2 = MAX SPD
+                    3 = MAX END
+                    4 = MXR SPD
+                -->
                 <cruise-mode type="int">0</cruise-mode>
+                <cruise-mode-label type="string">MANUAL</cruise-mode-label>
                 <descent-mach type="double">0.76</descent-mach>
                 <descent-kts type="double">290</descent-kts>
                 <descent-below-10k type="double">250</descent-below-10k>
@@ -2141,6 +2370,15 @@
             <screen-select type="int">0</screen-select>
             <click type="bool">0</click>
         </ccd>
+        <shared-ccd n="0">
+            <rel-x type="double">0</rel-x>
+            <rel-y type="double">0</rel-y>
+            <rel-inner type="double">0</rel-inner>
+            <rel-outer type="double">0</rel-outer>
+            <screen-select type="int">0</screen-select>
+            <click type="bool">0</click>
+            <target type="int">0</target>
+        </shared-ccd>
     </controls>
 
     <services>
@@ -2307,6 +2545,7 @@
                     <master type="bool">false</master>
                     <checking type="bool">false</checking>
                     <ok type="bool">false</ok>
+                    <checked type="bool">false</checked>
                 </no-takeoff>
                 <doors>
                     <l1><open type="bool">false</open></l1>
@@ -2322,7 +2561,7 @@
             </messages>
             <declutter>
                 <active type="bool">false</active>
-                <cond type="bool">false</cond>
+                <inhibit-cond type="bool">false</inhibit-cond>
                 <eicas-full type="bool">false</eicas-full>
                 <inhibit type="bool">false</inhibit>
             </declutter>
@@ -3135,7 +3374,9 @@
             <file>Aircraft/E-jet-family/Nasal/fd-annun.nas</file>
         </annun>
         <fms>
+            <file>Aircraft/E-jet-family/Nasal/fms/lookup.nas</file>
             <file>Aircraft/E-jet-family/Nasal/fms/vspeeds.nas</file>
+            <file>Aircraft/E-jet-family/Nasal/fms/cruise.nas</file>
             <file>Aircraft/E-jet-family/Nasal/fms/speed.nas</file>
             <file>Aircraft/E-jet-family/Nasal/fms/vnav.nas</file>
             <file>Aircraft/E-jet-family/Nasal/fms/lnav.nas</file>
@@ -3208,20 +3449,26 @@
             </external_reactions>
             <aero-config>
                 <coefficients>
+                    <bank-elevator type="double">0.05</bank-elevator>
+                    <bank-mfs type="double">0.01</bank-mfs>
+                    <bank-rudder type="double">0.01</bank-rudder>
                     <drag-alpha type="double">2.0</drag-alpha>
                     <drag-beta type="double">1.0</drag-beta>
-                    <drag-elevator type="double">0.01</drag-elevator>
+                    <drag-elevator type="double">0.02</drag-elevator>
                     <drag-flap type="double">0.04</drag-flap>
                     <drag-gear type="double">0.04</drag-gear>
+                    <drag-hstab type="double">0.01</drag-hstab>
                     <drag-induced type="double">0.03</drag-induced>
                     <drag-mach type="double">0.021</drag-mach>
+                    <drag-mfs type="double">0.01</drag-mfs>
                     <drag-parasitic type="double">0.01</drag-parasitic>
                     <drag-slat type="double">0.003</drag-slat>
-                    <drag-mfs type="double">0.01</drag-mfs>
+                    <lift-elevator type="double">0.2</lift-elevator>
+                    <lift-hstab type="double">0.4</lift-hstab>
+                    <yaw-damper-beta type="double">-10</yaw-damper-beta>
+                    <yaw-damper-rate type="double">5</yaw-damper-rate>
+                    <yaw-elevator type="double">0.005</yaw-elevator>
                     <yaw-mfs type="double">0.01</yaw-mfs>
-                    <bank-mfs type="double">0.01</bank-mfs>
-                    <yaw-damper-beta type="double">-5</yaw-damper-beta>
-                    <yaw-damper-rate type="double">2</yaw-damper-rate>
                 </coefficients>
             </aero-config>
         </jsbsim>

@@ -2,36 +2,47 @@
 
 <flight_control name="FCS: E-Jet-Family">
     <channel name="Pitch">
-        <fcs_function name="fcs/elevator-sum">
+        <fcs_function name="Elevator Unpowered">
             <function>
-                <sum>
-                    <p>/controls/flight/elevator</p>
-                    <p>/it-autoflight/internal/elevator</p>
-                </sum>
+                <table>
+                    <independentVar lookup="row">aero/qbar-psf</independentVar>
+                    <tableData>
+                         0 1
+                         1 1
+                        15 0.5
+                        50 0.1
+                    </tableData>
+                </table>
             </function>
-            <output>fcs/elevator-sum</output>
+            <output>fcs/elevator-unpowered</output>
         </fcs_function>
 
-        <summer name="Pitch Trim Sum">
-            <input>fcs/elevator-cmd-fbw</input>
-            <input>fcs/pitch-trim-cmd-norm</input>
-            <clipto>
-                <min> -1.5 </min>
-                <max>  1.5 </max>
-            </clipto>
-        </summer>
-        
+        <switch>
+            <output>fcs/elevator-lh-cmd-powered</output>
+            <default value="fcs/elevator-unpowered" />
+            <test logic="OR" value="fcs/elevator-cmd-fbw">
+                /systems/actuators/elevator/pcu[0]/active &gt; 0
+                /systems/actuators/elevator/pcu[1]/active &gt; 0
+            </test>
+        </switch>
+
+        <actuator name="Elevator Master">
+            <input>fcs/elevator-lh-cmd-powered</input>
+            <rate_limit>2</rate_limit>
+            <output>fcs/elevator-lh-master</output>
+        </actuator>
+
         <aerosurface_scale name="Elevator Control">
-            <input>fcs/pitch-trim-sum</input>
+            <input>fcs/elevator-lh-master</input>
             <range>
                 <min> -0.25 </min>
                 <max>  0.25 </max>
             </range>
-            <output>fcs/elevator-pos-rad</output>
+            <output>fcs/elevator-lh-pos-rad</output>
         </aerosurface_scale>
-        
-        <aerosurface_scale name="elevator normalization">
-            <input>fcs/elevator-pos-rad</input>
+
+        <aerosurface_scale name="Elevator Normalization">
+            <input>fcs/elevator-lh-pos-rad</input>
             <domain>
                 <min> -0.25 </min>
                 <max>  0.25 </max>
@@ -40,20 +51,89 @@
                 <min> -1 </min>
                 <max>  1 </max>
             </range>
-            <output>fcs/elevator-pos-norm</output>
+            <output>fcs/elevator-lh-pos-norm</output>
+        </aerosurface_scale>
+
+        <switch>
+            <output>fcs/elevator-rh-cmd-powered</output>
+            <default value="fcs/elevator-unpowered" />
+            <test logic="OR" value="fcs/elevator-cmd-fbw">
+                /systems/actuators/elevator/pcu[2]/active &gt; 0
+                /systems/actuators/elevator/pcu[3]/active &gt; 0
+            </test>
+        </switch>
+
+        <actuator name="Elevator Master">
+            <input>fcs/elevator-rh-cmd-powered</input>
+            <rate_limit>2</rate_limit>
+            <output>fcs/elevator-rh-master</output>
+        </actuator>
+
+        <aerosurface_scale name="Elevator Control">
+            <input>fcs/elevator-rh-master</input>
+            <range>
+                <min> -0.25 </min>
+                <max>  0.25 </max>
+            </range>
+            <output>fcs/elevator-rh-pos-rad</output>
+        </aerosurface_scale>
+
+        <aerosurface_scale name="Elevator Normalization">
+            <input>fcs/elevator-rh-pos-rad</input>
+            <domain>
+                <min> -0.25 </min>
+                <max>  0.25 </max>
+            </domain>
+            <range>
+                <min> -1 </min>
+                <max>  1 </max>
+            </range>
+            <output>fcs/elevator-rh-pos-norm</output>
+        </aerosurface_scale>
+
+
+        <aerosurface_scale name="HStab Control">
+            <input>fcs/pitch-trim-cmd-norm</input>
+            <range>
+                <min> -0.25 </min>
+                <max>  0.25 </max>
+            </range>
+            <output>fcs/hstab-pos-rad</output>
+        </aerosurface_scale>
+
+        <aerosurface_scale name="HStab Normalization">
+            <input>fcs/hstab-pos-rad</input>
+            <domain>
+                <min> -0.25 </min>
+                <max>  0.25 </max>
+            </domain>
+            <range>
+                <min> -1 </min>
+                <max>  1 </max>
+            </range>
+            <output>fcs/hstab-pos-norm</output>
+        </aerosurface_scale>
+
+        <aerosurface_scale name="HStab Degrees">
+            <input>fcs/hstab-pos-rad</input>
+            <domain>
+                <min> -0.25 </min>
+                <max>  0.25 </max>
+            </domain>
+            <range>
+                <min> -14.3239448782705 </min>
+                <max>  14.3239448782705 </max>
+            </range>
+            <output>fcs/hstab-pos-deg</output>
         </aerosurface_scale>
     </channel>
-    
+
     <channel name="Roll">
-        <fcs_function name="fcs/aileron-sum">
-            <function>
-                <sum>
-                    <p>/controls/flight/aileron</p>
-                    <p>/it-autoflight/internal/aileron</p>
-                </sum>
-            </function>
+        <summer name="fcs/aileron-sum">
+            <input>/it-autoflight/internal/aileron</input>
             <output>fcs/aileron-sum</output>
-        </fcs_function>
+        </summer>
+
 
         <summer name="Roll Trim Sum">
             <input>fcs/aileron-sum</input>
@@ -63,25 +143,71 @@
                 <max>  1 </max>
             </clipto>
         </summer>
-        
+
+        <fcs_function name="Aileron Unpowered">
+            <function>
+                <table>
+                    <independentVar lookup="row">aero/qbar-psf</independentVar>
+                    <tableData>
+                         0 1
+                         1 1
+                        15 0.5
+                        50 0.1
+                    </tableData>
+                </table>
+            </function>
+            <output>fcs/aileron-unpowered</output>
+        </fcs_function>
+
+        <switch>
+            <output>fcs/left-aileron-cmd-powered</output>
+            <default value="fcs/aileron-unpowered" />
+            <test logic="OR" value="fcs/roll-trim-sum">
+                /systems/actuators/aileron/pcu[0]/active &gt; 0
+                /systems/actuators/aileron/pcu[1]/active &gt; 0
+            </test>
+        </switch>
+
+        <actuator name="Left Aileron Master">
+            <input>fcs/left-aileron-cmd-powered</input>
+            <rate_limit>2</rate_limit>
+            <output>fcs/left-aileron-master</output>
+        </actuator>
+
+        <switch>
+            <output>fcs/right-aileron-cmd-powered</output>
+            <default value="fcs/aileron-unpowered" />
+            <test logic="OR" value="-fcs/roll-trim-sum">
+                /systems/actuators/aileron/pcu[2]/active &gt; 0
+                /systems/actuators/aileron/pcu[3]/active &gt; 0
+            </test>
+        </switch>
+
+        <actuator name="Right Aileron Master">
+            <input>fcs/right-aileron-cmd-powered</input>
+            <rate_limit>2</rate_limit>
+            <output>fcs/right-aileron-master</output>
+        </actuator>
+
+
         <aerosurface_scale name="Left Aileron Control">
-            <input>fcs/roll-trim-sum</input>
+            <input>fcs/left-aileron-master</input>
             <range>
                 <min> -0.25 </min>
                 <max>  0.25 </max>
             </range>
             <output>fcs/left-aileron-pos-rad</output>
         </aerosurface_scale>
-        
+
         <aerosurface_scale name="Right Aileron Control">
-            <input>fcs/roll-trim-sum</input>
+            <input>fcs/right-aileron-master</input>
             <range>
                 <min> -0.25 </min>
                 <max>  0.25 </max>
             </range>
             <output>fcs/right-aileron-pos-rad</output>
         </aerosurface_scale>
-        
+
         <aerosurface_scale name="left aileron normalization">
             <input>fcs/left-aileron-pos-rad</input>
             <domain>
@@ -94,7 +220,7 @@
             </range>
             <output>fcs/left-aileron-pos-norm</output>
         </aerosurface_scale>
-        
+
         <aerosurface_scale name="right aileron normalization">
             <input>fcs/right-aileron-pos-rad</input>
             <domain>
@@ -107,9 +233,9 @@
             </range>
             <output>fcs/right-aileron-pos-norm</output>
         </aerosurface_scale>
-        
+
     </channel>
-    
+
     <channel name="Yaw">
         <summer name="Rudder Command Sum">
             <input>-/controls/flight/rudder</input>
@@ -120,7 +246,7 @@
                 <max>  0.55 </max>
             </clipto>
         </summer>
-        
+
         <scheduled_gain name="Yaw Damper Rate">
             <input>velocities/r-aero-rad_sec</input>
             <table>
@@ -132,7 +258,7 @@
             </table>
             <gain>fcs/yaw-damper-enable</gain>
         </scheduled_gain>
-        
+
         <scheduled_gain name="Yaw Damper Beta">
             <input>aero/beta-rad</input>
             <table>
@@ -144,7 +270,7 @@
             </table>
             <gain>aero-config/coefficients/yaw-damper-beta</gain>
         </scheduled_gain>
-        
+
         <scheduled_gain name="Yaw Damper">
             <input>velocities/r-aero-rad_sec</input>
             <table>
@@ -162,7 +288,7 @@
             <input>fcs/yaw-damper</input>
             <input>fcs/yaw-damper-beta</input>
         </summer>
-        
+
         <scheduled_gain name="Yaw Damper Final">
             <input>fcs/yaw-damper-sum</input>
             <table>
@@ -175,7 +301,7 @@
             </table>
             <gain>fcs/yaw-damper-enable</gain>
         </scheduled_gain>
-        
+
         <summer name="Rudder Sum">
             <input>fcs/rudder-command-sum</input>
             <input>fcs/yaw-damper-final</input>
@@ -184,16 +310,31 @@
                 <max>  1 </max>
             </clipto>
         </summer>
-        
-        <aerosurface_scale name="Rudder Control">
+
+        <switch>
+            <output>fcs/rudder-rate-limit</output>
+            <default value="0" />
+            <test logic="OR" value="2">
+                /systems/actuators/rudder/pcu[0]/active &gt; 0
+                /systems/actuators/rudder/pcu[1]/active &gt; 0
+            </test>
+        </switch>
+
+        <actuator>
             <input>fcs/rudder-sum</input>
+            <rate_limit>fcs/rudder-rate-limit</rate_limit>
+            <output>fcs/rudder-master</output>
+        </actuator>
+
+        <aerosurface_scale name="Rudder Control">
+            <input>fcs/rudder-master</input>
             <range>
                 <min> -0.530 </min>
                 <max>  0.530 </max>
             </range>
             <output>fcs/rudder-pos-rad</output>
         </aerosurface_scale>
-        
+
         <aerosurface_scale name="rudder normalization">
             <input>fcs/rudder-pos-rad</input>
             <domain>
@@ -206,11 +347,11 @@
             </range>
             <output>fcs/rudder-pos-norm</output>
         </aerosurface_scale>
-        
+
     </channel>
-    
+
     <channel name="Slats">
-        
+
         <!--Set slats according to http://www.smartcockpit.com/docs/Embraer_190-Flight_Controls.pdf page 4-->
         <fcs_function name="Slats Cmd">
             <function>
@@ -229,7 +370,7 @@
             </function>
             <output>fcs/slat-cmd-int-deg</output>
         </fcs_function>
-        
+
         <kinematic name="Slats Control">
             <input>fcs/slat-cmd-int-deg</input>
             <noscale/>
@@ -249,7 +390,7 @@
             </traverse>
             <output>fcs/slat-pos-deg</output>
         </kinematic>
-        
+
         <aerosurface_scale name="slat normalization">
             <input>fcs/slat-pos-deg</input>
             <domain>
@@ -262,15 +403,15 @@
             </range>
             <output>fcs/slat-pos-norm</output>
         </aerosurface_scale>
-        
+
     </channel>
-    
-    
-    
-    
+
+
+
+
     <channel name="Flaps">
-        
-        
+
+
         <!-- Set flaps according to http://www.smartcockpit.com/docs/Embraer_190-Flight_Controls.pdf page 4-->
         <fcs_function name="Flaps Cmd">
             <function>
@@ -289,7 +430,7 @@
             </function>
             <output>fcs/flap-cmd-int-deg</output>
         </fcs_function>
-        
+
         <kinematic name="Flaps Control">
             <input>fcs/flap-cmd-int-deg</input>
             <noscale/>
@@ -317,7 +458,7 @@
             </traverse>
             <output>fcs/flap-pos-deg</output>
         </kinematic>
-        
+
         <aerosurface_scale name="flap normalization">
             <input>fcs/flap-pos-deg</input>
             <domain>
@@ -330,25 +471,24 @@
             </range>
             <output>fcs/flap-pos-norm</output>
         </aerosurface_scale>
-        
+
     </channel>
-    
+
     <channel name="Landing Gear">
-        <kinematic name="Gear Control">
+        <switch>
+            <default value="0" />
+            <test logic="OR" value="0.066666667">
+                /systems/hydraulic/system[0]/pressurized &gt; 0
+                /systems/hydraulic/system[1]/pressurized &gt; 0
+            </test>
+            <output>gear/extend-retract-rate</output>
+        </switch>
+        <actuator name="Gear Control">
             <input>gear/gear-cmd-norm</input>
-            <traverse>
-                <setting>
-                    <position> 0 </position>
-                    <time>     0 </time>
-                </setting>
-                <setting>
-                    <position> 1 </position>
-                    <time>     15 </time>
-                </setting>
-            </traverse>
+            <rate_limit>gear/extend-retract-rate</rate_limit>
             <output>gear/gear-pos-norm</output>
-        </kinematic>
-        
+        </actuator>
+
     </channel>
 
     <channel name="Steering">
@@ -358,7 +498,7 @@
                 /controls/gear/enable-tiller == 0
             </test>
         </switch>
-        
+
         <fcs_function name="Nose Wheel Steering Limit 0">
           <function name="fcs/steer-nose-limit-deg[0]">
             <ifthen>
@@ -405,7 +545,7 @@
                   <!-- Tiller enabled: rudder pedals command +/- 7°, tiller follows IRL schedule. -->
                   <ifthen>
                     <property>/options/controls/realistic-nose-wheel-steering</property>
-                    
+
                     <!-- Realistic NWS: tiller must be kept down for tiller
                          steering; rudder pedals only steer when tiller up. -->
                       <min>
@@ -474,17 +614,38 @@
             </ifthen>
           </function>
         </fcs_function>
-        
+
+        <fcs_function name="Gear Nose Rate">
+            <function name="fcs/steer-nose-rate">
+                <table>
+                    <independentVar lookup="row">/systems/hydraulic/system[1]/pressure-psi</independentVar>
+                    <tableData>
+                        0 0
+                        1200 0
+                        1600 70
+                        3000 70
+                    </tableData>
+                </table>
+            </function>
+        </fcs_function>
+
         <actuator name="Gear Nose Actuator">
-          <input>fcs/steer-nose-deg[0]</input>
-          <rate_limit>70</rate_limit>
-          <output>fcs/steer-pos-deg[0]</output>
+            <input>fcs/steer-nose-deg[0]</input>
+            <rate_limit>fcs/steer-nose-rate</rate_limit>
+            <output>fcs/steer-pos-deg[0]</output>
         </actuator>
     </channel>
-    
+
     <channel name="MFS Left Outboard">
+        <switch name="MFS1 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-left-outboard-cmd-norm">
+                /systems/hydraulic/system[1]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs1-powered</output>
+        </switch>
         <kinematic name="MFS1 Control">
-            <input>fcs/mfs-left-outboard-cmd-norm</input>
+            <input>fcs/mfs1-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -497,8 +658,15 @@
             </traverse>
             <output>fcs/mfs1-pos-norm</output>
         </kinematic>
+        <switch name="MFS2 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-left-outboard-cmd-norm">
+                /systems/hydraulic/system[0]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs2-powered</output>
+        </switch>
         <kinematic name="MFS2 Control">
-            <input>fcs/mfs-left-outboard-cmd-norm</input>
+            <input>fcs/mfs2-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -511,8 +679,15 @@
             </traverse>
             <output>fcs/mfs2-pos-norm</output>
         </kinematic>
+        <switch name="MFS3 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-left-outboard-cmd-norm">
+                /systems/hydraulic/system[0]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs3-powered</output>
+        </switch>
         <kinematic name="MFS3 Control">
-            <input>fcs/mfs-left-outboard-cmd-norm</input>
+            <input>fcs/mfs3-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -527,8 +702,15 @@
         </kinematic>
     </channel>
     <channel name="MFS Left Inboard">
+        <switch name="MFS4 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-left-inboard-cmd-norm">
+                /systems/hydraulic/system[0]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs4-powered</output>
+        </switch>
         <kinematic name="MFS4 Control">
-            <input>fcs/mfs-left-inboard-cmd-norm</input>
+            <input>fcs/mfs4-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -541,8 +723,15 @@
             </traverse>
             <output>fcs/mfs4-pos-norm</output>
         </kinematic>
+        <switch name="MFS5 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-left-inboard-cmd-norm">
+                /systems/hydraulic/system[1]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs-left-inboard-powered</output>
+        </switch>
         <kinematic name="MFS5 Control">
-            <input>fcs/mfs-left-inboard-cmd-norm</input>
+            <input>fcs/mfs-left-inboard-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -557,8 +746,15 @@
         </kinematic>
     </channel>
     <channel name="MFS Right Outboard">
+        <switch name="MFS10 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-right-outboard-cmd-norm">
+                /systems/hydraulic/system[1]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs-right-outboard-powered</output>
+        </switch>
         <kinematic name="MFS10 Control">
-            <input>fcs/mfs-right-outboard-cmd-norm</input>
+            <input>fcs/mfs-right-outboard-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -571,8 +767,15 @@
             </traverse>
             <output>fcs/mfs10-pos-norm</output>
         </kinematic>
+        <switch name="MFS9 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-right-outboard-cmd-norm">
+                /systems/hydraulic/system[0]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs-right-outboard-powered</output>
+        </switch>
         <kinematic name="MFS9 Control">
-            <input>fcs/mfs-right-outboard-cmd-norm</input>
+            <input>fcs/mfs-right-outboard-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -585,8 +788,15 @@
             </traverse>
             <output>fcs/mfs9-pos-norm</output>
         </kinematic>
+        <switch name="MFS8 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-right-outboard-cmd-norm">
+                /systems/hydraulic/system[0]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs-right-outboard-powered</output>
+        </switch>
         <kinematic name="MFS8 Control">
-            <input>fcs/mfs-right-outboard-cmd-norm</input>
+            <input>fcs/mfs-right-outboard-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -601,8 +811,15 @@
         </kinematic>
     </channel>
     <channel name="MFS Right Inboard">
+        <switch name="MFS7 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-right-inboard-cmd-norm">
+                /systems/hydraulic/system[0]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs-right-inboard-powered</output>
+        </switch>
         <kinematic name="MFS7 Control">
-            <input>fcs/mfs-right-inboard-cmd-norm</input>
+            <input>fcs/mfs-right-inboard-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -615,8 +832,15 @@
             </traverse>
             <output>fcs/mfs7-pos-norm</output>
         </kinematic>
+        <switch name="MFS6 Powered">
+            <default value="0" />
+            <test logic="OR" value="fcs/mfs-right-inboard-cmd-norm">
+                /systems/hydraulic/system[1]/pressurized &gt; 0
+            </test>
+            <output>fcs/mfs-right-inboard-powered</output>
+        </switch>
         <kinematic name="MFS6 Control">
-            <input>fcs/mfs-right-inboard-cmd-norm</input>
+            <input>fcs/mfs-right-inboard-powered</input>
             <traverse>
                 <setting>
                     <position> 0 </position>
@@ -630,7 +854,7 @@
             <output>fcs/mfs6-pos-norm</output>
         </kinematic>
     </channel>
-    
+
     <channel name="FADEC">
         <pure_gain name="fcs/throttle-pos-norm[0]">
             <input>/fadec/throttle-cmd[0]</input>
@@ -644,27 +868,53 @@
     </channel>
 
 	<channel name="Brakes">
+		<summer name="fcs/brake-power-outboard-psi">
+            <input>/systems/hydraulic/system[0]/pressure-psi</input>
+        </summer>
+
+		<pure_gain name="fcs/brake-power-outboard-norm">
+            <gain>0.0001666667</gain>
+            <input>fcs/brake-power-outboard-psi</input>
+        </pure_gain>
+
+		<summer name="fcs/brake-power-inboard-psi">
+            <input>/systems/hydraulic/system[1]/pressure-psi</input>
+        </summer>
+
+		<pure_gain name="fcs/brake-power-inboard-norm">
+            <gain>0.0001666667</gain>
+            <input>fcs/brake-power-inboard-psi</input>
+        </pure_gain>
+
+		<summer name="fcs/emer-brake-power">
+            <input>/systems/hydraulic/system[0]/emergency-accumulator</input>
+            <input>/systems/hydraulic/system[1]/emergency-accumulator</input>
+        </summer>
+
+		<pure_gain name="fcs/emer-brake-power-norm">
+            <gain>4</gain>
+            <input>fcs/emer-brake-power</input>
+			<clipto>
+				<min>0</min>
+				<max>1</max>
+			</clipto>
+        </pure_gain>
+
 		<actuator name="fcs/brake-left">
 			<input>/controls/gear/brake-left</input>
 			<rate_limit>2</rate_limit>
 		</actuator>
-		
+
 		<actuator name="fcs/brake-right">
 			<input>/controls/gear/brake-right</input>
 			<rate_limit>2</rate_limit>
 		</actuator>
-		
-		<switch name="fcs/brake-avail">
-			<default value="1"/>
-            <!-- TODO: hydraulics logic -->
-		</switch>
-		
-		<fcs_function name="fcs/left-brake-input">
+
+		<fcs_function name="fcs/left-inboard-brake-input-norm">
 			<function>
 				<product>
-					<property>fcs/brake-avail</property>
+					<property>fcs/brake-power-inboard-norm</property>
 					<max>
-						<property>/services/chocks</property>
 						<property>fcs/brake-left</property>
 						<product>
 							<property>/autopilot/autobrake/output-brake</property>
@@ -674,24 +924,68 @@
 					</max>
 				</product>
 			</function>
+		</fcs_function>
+		<fcs_function name="fcs/left-outboard-brake-input-norm">
+			<function>
+				<product>
+					<property>fcs/brake-power-outboard-norm</property>
+					<max>
+						<property>fcs/brake-left</property>
+						<product>
+							<property>/autopilot/autobrake/output-brake</property>
+							<property>/autopilot/autobrake/engaged</property>
+						</product>
+						<property>/controls/gear/brake-parking</property>
+					</max>
+				</product>
+			</function>
+		</fcs_function>
+		<fcs_function name="fcs/left-brake-input-emer">
+			<function>
+				<product>
+					<property>fcs/emer-brake-power-norm</property>
+                    <property>/controls/gear/brake-parking</property>
+				</product>
+			</function>
+		</fcs_function>
+
+        <summer name="fcs/left-inboard-brake-input">
+            <input>fcs/left-inboard-brake-input-norm</input>
+            <input>fcs/left-brake-input-emer</input>
+        </summer>
+
+		<actuator>
+			<input>fcs/left-inboard-brake-input</input>
+			<rate_limit>10</rate_limit>
+            <output>fcs/left-inboard-brake</output>
+		</actuator>
+
+        <summer name="fcs/left-outboard-brake-input">
+            <input>fcs/left-outboard-brake-input-norm</input>
+            <input>fcs/left-brake-input-emer</input>
+        </summer>
+
+		<actuator>
+			<input>fcs/left-outboard-brake-input</input>
+			<rate_limit>10</rate_limit>
+            <output>fcs/left-outboard-brake</output>
+		</actuator>
+
+        <summer name="fcs/left-brake-cmd-norm">
+            <input>fcs/left-inboard-brake</input>
+            <input>fcs/left-outboard-brake</input>
+            <input>/services/chocks</input>
 			<clipto>
 				<min>0</min>
 				<max>1</max>
 			</clipto>
-		</fcs_function>
-		
-		<actuator name="fcs/left-brake-actuator">
-			<input>fcs/left-brake-input</input>
-			<rate_limit>10</rate_limit>
-            <output>fcs/left-brake-cmd-norm</output>
-		</actuator>
-		
-		<fcs_function name="fcs/right-brake-input">
+        </summer>
+
+		<fcs_function name="fcs/right-inboard-brake-input-norm">
 			<function>
 				<product>
-					<property>fcs/brake-avail</property>
+					<property>fcs/brake-power-inboard-norm</property>
 					<max>
-						<property>/services/chocks</property>
 						<property>fcs/brake-right</property>
 						<product>
 							<property>/autopilot/autobrake/output-brake</property>
@@ -701,17 +995,62 @@
 					</max>
 				</product>
 			</function>
+		</fcs_function>
+		<fcs_function name="fcs/right-outboard-brake-input-norm">
+			<function>
+				<product>
+					<property>fcs/brake-power-outboard-norm</property>
+					<max>
+						<property>fcs/brake-right</property>
+						<product>
+							<property>/autopilot/autobrake/output-brake</property>
+							<property>/autopilot/autobrake/engaged</property>
+						</product>
+						<property>/controls/gear/brake-parking</property>
+					</max>
+				</product>
+			</function>
+		</fcs_function>
+		<fcs_function name="fcs/right-brake-input-emer">
+			<function>
+				<product>
+					<property>fcs/emer-brake-power-norm</property>
+                    <property>/controls/gear/brake-parking</property>
+				</product>
+			</function>
+		</fcs_function>
+
+        <summer name="fcs/right-inboard-brake-input">
+            <input>fcs/right-inboard-brake-input-norm</input>
+            <input>fcs/right-brake-input-emer</input>
+        </summer>
+
+		<actuator>
+			<input>fcs/right-inboard-brake-input</input>
+			<rate_limit>10</rate_limit>
+            <output>fcs/right-inboard-brake</output>
+		</actuator>
+
+        <summer name="fcs/right-outboard-brake-input">
+            <input>fcs/right-outboard-brake-input-norm</input>
+            <input>fcs/right-brake-input-emer</input>
+        </summer>
+
+		<actuator>
+			<input>fcs/right-outboard-brake-input</input>
+			<rate_limit>10</rate_limit>
+            <output>fcs/right-outboard-brake</output>
+		</actuator>
+
+        <summer name="fcs/right-brake-cmd-norm">
+            <input>fcs/right-inboard-brake</input>
+            <input>fcs/right-outboard-brake</input>
+            <input>/services/chocks</input>
 			<clipto>
 				<min>0</min>
 				<max>1</max>
 			</clipto>
-		</fcs_function>
-		
-		<actuator name="fcs/right-brake-actuator">
-			<input>fcs/right-brake-input</input>
-			<rate_limit>10</rate_limit>
-            <output>fcs/right-brake-cmd-norm</output>
-		</actuator>
-		
+        </summer>
+
 	</channel>
 </flight_control>

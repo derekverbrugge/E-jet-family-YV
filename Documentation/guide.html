@@ -140,6 +140,14 @@ mouse working normally is possible; <a href="https://wiki.flightgear.org/Input_d
 page</a> on the
 FlightGear wiki explains how.</p>
 
+<p>It is also possible to use a single input device to drive both CCD's, with a
+toggle to select the 'current' one. To use this, map your device inputs to
+<code>/controls/shared-ccd</code>; the same properties exist here as in the individual
+CCD's, plus a <code>target</code> property that can be set to either 0 or 1 to control the
+left and right CCD respectively. Inputs to the shared CCD will be forwarded to
+the active target according to this property, so you can use this to map a
+button on your input device to switch between CCD's.</p>
+
 <p>The following functionality is available through the CCD-driven GUI:</p>
 
 <h3>PFD</h3>
@@ -195,6 +203,11 @@ available.</p>
 
 <ul>
 <li>GPU AC POWER - ON</li>
+<li>HYDRAULIC PTU - AUTO</li>
+<li>HYDRAULIC SYS 1 - AUTO</li>
+<li>HYDRAULIC SYS 2 - AUTO</li>
+<li>HYDRAULIC SYS 3 ELEC PUMP A - ON</li>
+<li>HYDRAULIC SYS 3 ELEC PUMP B - AUTO</li>
 <li>IDG 1 - AUTO</li>
 <li>IDG 2 - AUTO</li>
 <li>AC BUS TIE - AUTO</li>
@@ -228,6 +241,11 @@ cross-bleed from #1 just before takeoff.</p>
 
 <ul>
 <li>GPU AC POWER - ON</li>
+<li>HYDRAULIC PTU - AUTO</li>
+<li>HYDRAULIC SYS 1 - AUTO</li>
+<li>HYDRAULIC SYS 2 - AUTO</li>
+<li>HYDRAULIC SYS 3 ELEC PUMP A - ON</li>
+<li>HYDRAULIC SYS 3 ELEC PUMP B - AUTO</li>
 <li>IDG 1 - AUTO</li>
 <li>IDG 2 - AUTO</li>
 <li>AC BUS TIE - AUTO</li>
@@ -273,6 +291,11 @@ cross-bleed from #1 just before takeoff.</p>
 <li>BATTERY 2 - ON</li>
 <li>DC BUS TIES - AUTO</li>
 <li>APU GEN - AUTO</li>
+<li>HYDRAULIC PTU - AUTO</li>
+<li>HYDRAULIC SYS 1 - AUTO</li>
+<li>HYDRAULIC SYS 2 - AUTO</li>
+<li>HYDRAULIC SYS 3 ELEC PUMP A - ON</li>
+<li>HYDRAULIC SYS 3 ELEC PUMP B - AUTO</li>
 <li>APU - START</li>
 <li>APU RPM - WAIT FOR 100%</li>
 <li>APU BLEED - ON</li>
@@ -310,6 +333,11 @@ adapted for a single-engine taxi.</p>
 <li>BATTERY 2 - ON</li>
 <li>DC BUS TIES - AUTO</li>
 <li>APU GEN - AUTO</li>
+<li>HYDRAULIC PTU - AUTO</li>
+<li>HYDRAULIC SYS 1 - AUTO</li>
+<li>HYDRAULIC SYS 2 - AUTO</li>
+<li>HYDRAULIC SYS 3 ELEC PUMP A - ON</li>
+<li>HYDRAULIC SYS 3 ELEC PUMP B - AUTO</li>
 <li>APU - START</li>
 <li>APU RPM - WAIT FOR 100%</li>
 <li>APU BLEED - ON</li>
@@ -556,12 +584,13 @@ configured correctly:</p>
 <ul>
 <li>An active flight plan (via Route Manager, or the RTE and FPL pages in the
 MCDU)</li>
-<li>Performance settings for all flight phases (via the E-Jet family >
-Performance Config menu, or via the PERF INIT and PERFORMANCE > TAKEOFF and
-PERFORMANCE > LANDING pages in the MCDU)</li>
+<li>Performance settings for all flight phases (via the PERF INIT and PERFORMANCE
+<blockquote>
+  <p>TAKEOFF and PERFORMANCE > LANDING pages in the MCDU)</li>
 </ul>
 
 <p>Managed speed will use the following logic:</p>
+</blockquote></p>
 
 <ul>
 <li>During takeoff, target V2 until reaching V2, then target V2 + 10 until
@@ -574,7 +603,7 @@ speed between limit and limit + 2000 ft to produce a gradual speed-up that
 does not arrest the climb entirely. At FL290, switch to climb Mach (default:
 Mach .73).</li>
 <li>Once levelled off after reaching cruise altitude, speed up to configured
-cruise speed (default: 300 kts below FL290, Mach .77 above FL290).</li>
+cruise speed.</li>
 <li>When descending, select descent speed (default: 290 kts / Mach .77), but
 respect low-altitude limit (default: 250 kts below 10,000 ft / FL100), using
 the same interpolation as for the climb.</li>
@@ -586,6 +615,32 @@ setting, down to final approach speed (Vref + 5 or Vref + 10).</li>
 (e.g., a speed restriction of 220 KIAS on the departure will prevent the
 aircraft from speeding up to 250 KIAS for the climb).</li>
 </ul>
+
+<h4>Cruise Speed Modes</h4>
+
+<p>Cruise speed can be set to one of 5 modes:</p>
+
+<ul>
+<li><strong>Manual</strong> (indicated as airspeed/mach number in the MCDU): use the exact
+airspeed (below FL290) or mach number (FL290 and up) as entered by the pilot.</li>
+<li><strong>Long Range Cruise</strong> (<code>LRC</code>): this picks an airspeed/mach number that will
+achieve within 99% of the maximum obtainable range for the aircraft in its
+current configuration.</li>
+<li><strong>Max Speed</strong> (<code>MAX SPD</code>): this picks the fastest speed the aircraft can
+safely fly (320 knots / Mach 0.82). Used when fuel burn is not a concern, and
+you just need to get to your destination as fast as possible.</li>
+<li><strong>Max Endurance</strong> (<code>MAX END</code>): this optimizes speed for maximum endurance
+(flight time). Typically selects approx. 210 knots and Mach 0.60. Useful in
+emergencies, when you need to buy yourself as much time as possible.</li>
+<li><strong>Max Range Speed</strong> (<code>MXR SPD</code>): picks an airspeed/mach number that will
+achieve the absolute longest range possible, at the expense of being about 4%
+slower than Long Range Cruise. Useful when range is the most critical
+concern.</li>
+</ul>
+
+<p>Note that the FMS does not calculate cruise speeds based on a cost index (CI) -
+this must be done during flight planning, and the calculated cruise speeds
+entered manually.</p>
 
 <h3>Autoland</h3>
 
@@ -1049,9 +1104,12 @@ the EFB.</p>
 
 <ul>
 <li>The screen is clickable, simulating a <strong>touchscreen</strong></li>
+<li>Mouse wheel on the screen simulates <strong>zooming / scrolling</strong> (the exact
+function depends on the app in use).</li>
 <li>LMB clicking on the case flips between portrait and landscape <strong>orientation</strong></li>
 <li>Mouse wheel on the case adjusts <strong>brightness</strong></li>
-<li>MMB clicking on the case operates the <strong>power</strong> button</li>
+<li>MMB clicking on the case reloads the entire EFB code (think of it as a
+"reboot").</li>
 </ul>
 
 <h2>CPDLC / ACARS</h2>
